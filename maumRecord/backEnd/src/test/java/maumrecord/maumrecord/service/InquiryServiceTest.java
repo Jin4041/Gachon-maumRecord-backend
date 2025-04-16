@@ -9,6 +9,7 @@ import maumrecord.maumrecord.repository.UserInquiryRepository;
 import maumrecord.maumrecord.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -177,8 +178,51 @@ class InquiryServiceTest {
         //then
         assertEquals(1, result.size());
     }
+    
+    //todo: argumentcaptor 정리 후 코드 리뷰
+    //답변 작성 후 매핑여부 확인
+    @Test
+    void replyAnswer_shouldSetReplyToInquiry() {
+        // given
+        User user=User.builder().build();
+        user.setId(1L);
+        UserInquiry inquiry = UserInquiry.builder()
+                .id(1L)
+                .title("Test Inquiry")
+                .message("This is a test inquiry.")
+                .status(UserInquiry.InquiryStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .user(user)
+                .build();
 
-    //특정 답변 조회
+        when(userInquiryRepository.findById(1L)).thenReturn(Optional.of(inquiry));
+        when(userInquiryRepository.save(any(UserInquiry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ArgumentCaptor<AdminAnswer> answerCaptor = ArgumentCaptor.forClass(AdminAnswer.class);
+        when(adminAnswerRepository.save(answerCaptor.capture())).thenAnswer(invocation -> {
+            AdminAnswer ans = invocation.getArgument(0);
+            ans.setId(10L); // 저장된 후 ID 할당된 것처럼 시뮬레이션
+            return ans;
+        });
+
+        InquiryRequest request = new InquiryRequest();
+        request.setMessage("Reply Message");
+
+        // when
+        inquiryService.replyAnswer(request, 1L);
+
+        // then
+        AdminAnswer savedAnswer = answerCaptor.getValue();
+        assertNotNull(savedAnswer);
+        assertEquals("Re: Test Inquiry", savedAnswer.getTitle());
+        assertEquals("Reply Message", savedAnswer.getContent());
+        assertEquals(inquiry, savedAnswer.getInquiry());
+
+        // 연관관계 확인
+        assertEquals(savedAnswer, inquiry.getReply());
+    }
+
+    //특정 답변 조회 
     @Test
     void findReply() {
         // given
@@ -186,30 +230,26 @@ class InquiryServiceTest {
                 .title("test title")
                 .id(1L)
                 .build();
-        when(userInquiryRepository.findById(1L)).thenReturn(Optional.of(inquiry));
+        userInquiryRepository.save(inquiry);
 
-        AdminAnswer answer = adminAnswerRepository.save(AdminAnswer.builder()
+        AdminAnswer answer = AdminAnswer.builder()
                 .inquiry(inquiry)
                 .title("Re: test title")
                 .content("test Message")
                 .id(1L)
-                .build());
-
-        when(adminAnswerRepository.save(any(AdminAnswer.class))).thenReturn(answer);
+                .build();
+        adminAnswerRepository.save(answer);
+        when(adminAnswerRepository.findById(1L)).thenReturn(Optional.of(answer));
 
         inquiry.setReply(answer);
         userInquiryRepository.save(inquiry);
-        when(userInquiryRepository.save(any(UserInquiry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         //when
-        InquiryRequest request = new InquiryRequest();
-        request.setMessage("test Message");
-        inquiryService.replyAnswer(request, 1L);
+        Map<UserInquiry,AdminAnswer>result= inquiryService.answerMap(1L);
 
         // then
-        assertNotNull(inquiry.getReply());
-        assertEquals("Re: test title", inquiry.getReply().getTitle());
-        assertEquals("test Message", inquiry.getReply().getContent());
+        assertNotNull(result);
+        assertEquals(result.keySet().stream().findFirst(),Optional.of(inquiry));
+        assertEquals(result.values().stream().findFirst(),Optional.of(answer));
     }
-
 }
