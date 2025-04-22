@@ -43,14 +43,14 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, TokenAuthenticationFilter tokenAuthenticationFilter) throws Exception{
         return http
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)  //토큰 기반 인증을 사용하기 때문에 csrf 비활성화
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() //todo: 테스트용으로 users 열어둠
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/signup", "/login", "/users").permitAll()  //회원가입, 로그인 페이지는 모두 허용
                         .requestMatchers("/admin", "/admin/**").hasRole("ADMIN")  // 관리자 권한 필요
                         .requestMatchers("/user", "/user/**").hasRole("USER")    // 일반 사용자 권한 필요
                         .anyRequest().authenticated())
-                .formLogin(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable) //별도의 로그인 페이지를 사용하기 때문에 폼 기반 로그인 비활성화
                 .logout(logout->logout
                         .logoutSuccessHandler((req, res, auth) -> res.sendRedirect("http://frontend:3000/login"))  //로그아웃 성공 후 이동
                         .invalidateHttpSession(true))
@@ -71,7 +71,7 @@ public class WebSecurityConfig {
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
+    //todo: 빌드 시 수정 필요
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

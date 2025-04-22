@@ -1,7 +1,10 @@
 package maumrecord.maumrecord.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -62,7 +65,7 @@ public class User implements UserDetails {
 
     @Column(name = "lastHealingDate")
     private String lastHealingDate;    // e.g., '2025-03-22'
-
+    //todo: active 여부 기준 및 처리 결정
     @Column(name = "active")
     private boolean active=true;
 
@@ -74,7 +77,7 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
-    }
+    }   //사용자 이메일 반환
 
     @Override
     public  String getPassword(){
@@ -109,5 +112,4 @@ public class User implements UserDetails {
     }
 }
 
-//todo: 각 힐링 요소 별 사용량이나 기록 등 이용 통계에 사용할 데이터 추가 - db확정 후 확인
 //todo: 계정만료, 비밀번호 만료, 계정 잠금, 계정활성화 여부에 대한 처리
