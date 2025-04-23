@@ -8,4 +8,5 @@ import lombok.Setter;
 public class InquiryRequest {
     String title;
     String message;
+    String file;
 }

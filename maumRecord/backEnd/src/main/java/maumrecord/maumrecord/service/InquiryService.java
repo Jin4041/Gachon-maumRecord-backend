@@ -4,13 +4,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import maumrecord.maumrecord.domain.AdminAnswer;
 import maumrecord.maumrecord.domain.User;
+import maumrecord.maumrecord.domain.UserActivityLog;
 import maumrecord.maumrecord.domain.UserInquiry;
 import maumrecord.maumrecord.dto.InquiryRequest;
 import maumrecord.maumrecord.repository.AdminAnswerRepository;
+import maumrecord.maumrecord.repository.UserActivityLogRepository;
 import maumrecord.maumrecord.repository.UserInquiryRepository;
 import maumrecord.maumrecord.repository.UserRepository;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
@@ -27,18 +28,25 @@ public class InquiryService {
     private final UserInquiryRepository userInquiryRepository;
     private final UserRepository userRepository;
     private final UserDetailService userDetailService;
+    private final UserActivityLogRepository userActivityLogRepository;
 
     //유저 문의 작성
     public void newInquiry(Authentication authentication, InquiryRequest request) {
-        Long id=userRepository.findByEmail(authentication.getName())
-                .orElseThrow(()->new UsernameNotFoundException("User not found")).getId();
+        User user=userRepository.findByEmail(authentication.getName())
+                .orElseThrow(()->new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
         userInquiryRepository.save(UserInquiry.builder()
                 .title(request.getTitle())
-                .id(id)
+                .user(user)
                 .status(UserInquiry.InquiryStatus.PENDING)
                 .message(request.getMessage())
+                .file(request.getFile())
+                .build());
+        userActivityLogRepository.save(UserActivityLog.builder()
+                .user(user)
+                .activityType("inquiry")
                 .build());
     }
+
     //전체 문의 리스트
     public Map<UserInquiry, AdminAnswer> findMyInquires(Authentication authentication) {
         User user= userDetailService.loadUserByUsername(authentication.getName());
@@ -52,6 +60,7 @@ public class InquiryService {
         }
         return result;
     }
+
     //특정 문의 조회
     public Map<UserInquiry, AdminAnswer> findMyInquiry(Authentication authentication, Long id) throws AccessDeniedException {
         User user= userDetailService.loadUserByUsername(authentication.getName());
@@ -67,10 +76,12 @@ public class InquiryService {
     public List<UserInquiry> noReplyInquiries() {
         return userInquiryRepository.findByReplyIsNull();
     }
+
     //전체 답변 내역
     public List<AdminAnswer> answers() {
         return adminAnswerRepository.findAll();
     }
+
     //답변 작성
     public void replyAnswer(InquiryRequest request, Long inquiryId) {
         UserInquiry inquiry = userInquiryRepository.findById(inquiryId).orElseThrow(()->new IllegalArgumentException("해당 문의를 찾지 못했습니다."));
@@ -80,8 +91,10 @@ public class InquiryService {
                 .content(request.getMessage())
                 .build());
         inquiry.setReply(answer);
+        inquiry.setStatus(UserInquiry.InquiryStatus.ANSWERED);
         userInquiryRepository.save(inquiry);
     }
+
     //특정 답변 및 해당 문의 확인
     public Map<UserInquiry, AdminAnswer> answerMap(Long answerId){
         AdminAnswer answer = adminAnswerRepository.findById(answerId).orElseThrow(()-> new IllegalArgumentException("해당 답변을 찾지 못했습니다."));

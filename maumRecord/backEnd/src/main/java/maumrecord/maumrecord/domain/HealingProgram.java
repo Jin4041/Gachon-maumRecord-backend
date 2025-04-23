@@ -3,6 +3,9 @@ package maumrecord.maumrecord.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "healing_program")
 @Getter
@@ -24,15 +27,16 @@ public class HealingProgram {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    // 카테고리 (예: 명상, 음악, 호흡 등)
+    // 카테고리 (예: yoga,music,meditation)
     @Column
     private String category;
 
-    // 썸네일 이미지 경로
+    // 파일 경로
     @Column
-    private String imageUrl;
+    private String fileUrl;
 
-    // 삭제 여부 (논리 삭제 처리용)
-    @Column(nullable = false)
-    private Boolean isDeleted = false;
+    // 요가 코스와 양방향 매핑용, 
+    // 자세는 재사용가능하다고 가정하여 해당 자세가 사용된 코스들을 리스트로 저장
+    @OneToMany(mappedBy = "yogaPose", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<YogaCourse> yogaCourse=new ArrayList<>();
 }

@@ -22,7 +22,7 @@ CREATE TABLE user_inquiry (
                               title TEXT NOT NULL,
                               message TEXT NOT NULL,
                               file TEXT NOT NULL,
-                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                              date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                               status ENUM('OPEN', 'ANSWERED', 'CLOSED') DEFAULT 'OPEN',
                               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -43,6 +43,7 @@ CREATE TABLE healing_program (
                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                  name VARCHAR(255) NOT NULL,
                                  description TEXT,
+                                 fileUrl TEXT,
                                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -55,7 +56,6 @@ CREATE TABLE user_activity_log (
                                    activity_type VARCHAR(50) NOT NULL,            -- 로그 유형 (login, diary_creation, healing_program_execution 등)
                                    target_id BIGINT,                             -- 관련된 대상 ID (예: 일기 ID, 프로그램 ID 등)
                                    activity_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- 활동 시간
-                                   details TEXT,                                  -- 상세 정보 (예: 일기 내용, 프로그램 이름 등)
                                    FOREIGN KEY (user_id) REFERENCES users(id)    -- 사용자 정보와 연결0
 );
 --일기 테이블

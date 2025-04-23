@@ -20,7 +20,7 @@ public class UserInquiry {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user", nullable = false)
     private User user;
 
     @Column(nullable = false)
@@ -29,9 +29,12 @@ public class UserInquiry {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Column
+    private String file;
+
     @CreatedDate
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime date;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

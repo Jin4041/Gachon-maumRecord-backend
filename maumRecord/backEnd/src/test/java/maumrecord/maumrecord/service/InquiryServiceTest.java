@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import java.nio.file.AccessDeniedException;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -191,7 +190,6 @@ class InquiryServiceTest {
                 .title("Test Inquiry")
                 .message("This is a test inquiry.")
                 .status(UserInquiry.InquiryStatus.PENDING)
-                .createdAt(LocalDateTime.now())
                 .user(user)
                 .build();
 
