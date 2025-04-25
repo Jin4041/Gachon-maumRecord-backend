@@ -1,17 +1,20 @@
 FROM openjdk:17-slim
 
-RUN apt-get update && apt-get install -y findutils
+RUN apt-get update
 
 WORKDIR /app
 
-COPY backEnd/gradlew .
-COPY backEnd/gradle ./gradle
-COPY backEnd/build.gradle .
-COPY backEnd/settings.gradle .
-COPY backEnd/src ./src
+COPY ./gradlew .
+COPY ./gradle ./gradle
+COPY ./build.gradle .
+COPY ./settings.gradle .
+COPY ./src ./src
 
 # 종속성 미리 다운
 RUN ./gradlew --no-daemon build -x test
 
 EXPOSE 8080
-CMD ["./gradlew", "--no-daemon", "bootRun"]
+COPY ./build/libs/maumRecord-0.0.1-SNAPSHOT.jar app.jar
+CMD ["java", "-jar", "app.jar"]
+#아래는 배포용 코드
+#CMD ["./gradlew", "--no-daemon", "bootRun"]
