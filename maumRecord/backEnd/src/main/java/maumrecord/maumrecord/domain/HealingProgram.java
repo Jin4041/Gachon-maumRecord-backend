@@ -38,5 +38,6 @@ public class HealingProgram {
     // 요가 코스와 양방향 매핑용, 
     // 자세는 재사용가능하다고 가정하여 해당 자세가 사용된 코스들을 리스트로 저장
     @OneToMany(mappedBy = "yogaPose", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<YogaCourse> yogaCourse=new ArrayList<>();
 }

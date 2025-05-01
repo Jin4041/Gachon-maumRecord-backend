@@ -5,12 +5,14 @@ import maumrecord.maumrecord.config.jwt.TokenProvider;
 import maumrecord.maumrecord.domain.User;
 import maumrecord.maumrecord.dto.LoginRequest;
 import maumrecord.maumrecord.dto.UserRequest;
+import maumrecord.maumrecord.repository.UserActivityLogRepository;
 import maumrecord.maumrecord.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -33,6 +35,8 @@ class UserServiceTest {
     private UserDetailService userDetailService;
     @InjectMocks
     private UserService userService;
+    @Mock
+    private UserActivityLogRepository userActivityLogRepository;
 
     //회원가입 테스트
     @Test
@@ -105,7 +109,7 @@ class UserServiceTest {
         when(passwordEncoder.matches("wrongPw", "encodedPw")).thenReturn(false);
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> userService.login(dto));
+        assertThrows(BadCredentialsException.class, () -> userService.login(dto));
     }
     //잘못된 이메일로 로그인 시 테스트
     @Test

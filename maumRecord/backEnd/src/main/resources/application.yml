@@ -7,11 +7,16 @@ spring:
       hibernate:
         format_sql: true
     defer-datasource-initialization: true
+    database-platform: org.hibernate.dialect.MariaDBDialect
   datasource:
-    url: jdbc:mariadb://localhost:3306/db25109
+    url: jdbc:mariadb://host.docker.internal:3306/db25109
     driver-class-name: org.mariadb.jdbc.Driver
     username: dbid251
     password: dbpass251
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
   sql:
     init:
@@ -27,4 +32,4 @@ springdoc:
     enabled: true
 
 server:
-  port: 60009
+  port: 8080

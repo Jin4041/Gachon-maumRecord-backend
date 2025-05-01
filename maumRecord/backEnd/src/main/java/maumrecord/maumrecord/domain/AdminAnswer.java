@@ -21,8 +21,8 @@ public class AdminAnswer {
 
     // 답변하는 문의의 id
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inquiry_id", nullable = false)
-    private UserInquiry inquiry;
+    @JoinColumn(name = "userInquiry", nullable = false)
+    private UserInquiry userInquiry;
 
     @Column(nullable = false)
     private String title;

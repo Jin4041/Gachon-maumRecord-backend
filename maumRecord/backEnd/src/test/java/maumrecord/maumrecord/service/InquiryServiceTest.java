@@ -5,6 +5,7 @@ import maumrecord.maumrecord.domain.User;
 import maumrecord.maumrecord.domain.UserInquiry;
 import maumrecord.maumrecord.dto.InquiryRequest;
 import maumrecord.maumrecord.repository.AdminAnswerRepository;
+import maumrecord.maumrecord.repository.UserActivityLogRepository;
 import maumrecord.maumrecord.repository.UserInquiryRepository;
 import maumrecord.maumrecord.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,8 @@ class InquiryServiceTest {
     private InquiryService inquiryService;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private UserActivityLogRepository userActivityLogRepository;
 
     //새 문의 테스트
     @Test
@@ -96,7 +99,7 @@ class InquiryServiceTest {
 
     //특정 문의 조회 테스트
     @Test
-    void findMyInquiry() throws AccessDeniedException {
+    void findUserInquiryById() throws AccessDeniedException {
         //given
         Authentication authentication = mock(Authentication.class);
         when(authentication.getName()).thenReturn("test@test.com");
@@ -112,7 +115,7 @@ class InquiryServiceTest {
         mockResult.put(inquiry, null);
         when(userInquiryRepository.findById(1L)).thenReturn(Optional.of(inquiry));
         //when
-        UserInquiry found = inquiryService.findMyInquiry(authentication, 1L)
+        UserInquiry found = inquiryService.findUserInquiryById(authentication, 1L)
                 .keySet().stream().findFirst().orElse(null);
         //then
         assertNotNull(found);
@@ -121,7 +124,7 @@ class InquiryServiceTest {
 
     //권한 없는 특정 문의 조회 테스트
     @Test
-    void findMyInquiry_accessDenied() throws AccessDeniedException {
+    void findUserInquiry_BuId_accessDenied() throws AccessDeniedException {
         //given
         Authentication authentication = mock(Authentication.class);
         when(authentication.getName()).thenReturn("test1@test.com");
@@ -141,7 +144,7 @@ class InquiryServiceTest {
         when(userInquiryRepository.findById(1L)).thenReturn(Optional.of(inquiry));
         //when && then
         assertThrows(AccessDeniedException.class, () -> {
-            inquiryService.findMyInquiry(authentication, 1L);
+            inquiryService.findUserInquiryById(authentication, 1L);
         });
     }
 
@@ -214,7 +217,7 @@ class InquiryServiceTest {
         assertNotNull(savedAnswer);
         assertEquals("Re: Test Inquiry", savedAnswer.getTitle());
         assertEquals("Reply Message", savedAnswer.getContent());
-        assertEquals(inquiry, savedAnswer.getInquiry());
+        assertEquals(inquiry, savedAnswer.getUserInquiry());
 
         // 연관관계 확인
         assertEquals(savedAnswer, inquiry.getReply());
@@ -231,7 +234,7 @@ class InquiryServiceTest {
         userInquiryRepository.save(inquiry);
 
         AdminAnswer answer = AdminAnswer.builder()
-                .inquiry(inquiry)
+                .userInquiry(inquiry)
                 .title("Re: test title")
                 .content("test Message")
                 .id(1L)

@@ -55,19 +55,19 @@ public class InquiryService {
             return new HashMap<>();
         Map<UserInquiry, AdminAnswer> result = new LinkedHashMap<>();
         for (UserInquiry inquiry : inquiries) {
-            AdminAnswer answer = adminAnswerRepository.findMyInquiry(inquiry).orElse(null);
+            AdminAnswer answer = adminAnswerRepository.findByUserInquiry(inquiry).orElse(null);
             result.put(inquiry, answer); // answer가 없으면 null로 저장됨
         }
         return result;
     }
 
     //특정 문의 조회
-    public Map<UserInquiry, AdminAnswer> findMyInquiry(Authentication authentication, Long id) throws AccessDeniedException {
+    public Map<UserInquiry, AdminAnswer> findUserInquiryById(Authentication authentication, Long id) throws AccessDeniedException {
         User user= userDetailService.loadUserByUsername(authentication.getName());
         UserInquiry inquiry = userInquiryRepository.findById(id).orElseThrow(()->new IllegalArgumentException("해당 문의를 찾지 못했습니다."));
         if(!inquiry.getUser().equals(user) && !user.getRole().equals(User.Role.ADMIN))
             throw new AccessDeniedException("권한이 없는 접근입니다.");
-        AdminAnswer answer = adminAnswerRepository.findMyInquiry(inquiry).orElse(null);
+        AdminAnswer answer = adminAnswerRepository.findByUserInquiry(inquiry).orElse(null);
         Map<UserInquiry, AdminAnswer> result = new HashMap<>();
         result.put(inquiry, answer);
         return result;
@@ -86,7 +86,7 @@ public class InquiryService {
     public void replyAnswer(InquiryRequest request, Long inquiryId) {
         UserInquiry inquiry = userInquiryRepository.findById(inquiryId).orElseThrow(()->new IllegalArgumentException("해당 문의를 찾지 못했습니다."));
         AdminAnswer answer=adminAnswerRepository.save(AdminAnswer.builder()
-                .inquiry(inquiry)
+                .userInquiry(inquiry)
                 .title("Re: "+inquiry.getTitle())
                 .content(request.getMessage())
                 .build());
@@ -98,7 +98,7 @@ public class InquiryService {
     //특정 답변 및 해당 문의 확인
     public Map<UserInquiry, AdminAnswer> answerMap(Long answerId){
         AdminAnswer answer = adminAnswerRepository.findById(answerId).orElseThrow(()-> new IllegalArgumentException("해당 답변을 찾지 못했습니다."));
-        UserInquiry inquiry = answer.getInquiry();
+        UserInquiry inquiry = answer.getUserInquiry();
         HashMap<UserInquiry, AdminAnswer> result = new HashMap<>();
         result.put(inquiry, answer);
         return result;

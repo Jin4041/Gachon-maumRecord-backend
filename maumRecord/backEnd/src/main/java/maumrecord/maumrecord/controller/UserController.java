@@ -62,14 +62,14 @@ public class UserController {
 
     @GetMapping(value = "/my-inquiries")
     @Operation(summary = "내 문의 내역")
-    public Map<UserInquiry, AdminAnswer> myInquiries(Authentication authentication){
+    public Map<UserInquiry, AdminAnswer> findInquiries(Authentication authentication){
         return inquiryService.findMyInquires(authentication);
     }
 
     @GetMapping(value = "/my-inquiriy/{id}")
     @Operation(summary = "내 문의 내역")
-    public Map<UserInquiry, AdminAnswer> myInquiries(Authentication authentication, @PathVariable Long id) throws AccessDeniedException {
-        return inquiryService.findMyInquiry(authentication, id);
+    public Map<UserInquiry, AdminAnswer> findInquiryById(Authentication authentication, @PathVariable Long id) throws AccessDeniedException {
+        return inquiryService.findUserInquiryById(authentication, id);
     }
 
     @GetMapping(value = "/healing")

@@ -40,7 +40,7 @@ public class UserInquiry {
     @Column(nullable = false)
     private InquiryStatus status;
 
-    @OneToOne(mappedBy = "inquiry", fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "userInquiry", fetch = FetchType.EAGER)
     private AdminAnswer reply;
 
     public enum InquiryStatus {
