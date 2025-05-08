@@ -67,7 +67,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/my-inquiriy/{id}")
-    @Operation(summary = "내 문의 내역")
+    @Operation(summary = "내 문의 확인")
     public Map<UserInquiry, AdminAnswer> findInquiryById(Authentication authentication, @PathVariable Long id) throws AccessDeniedException {
         return inquiryService.findUserInquiryById(authentication, id);
     }
