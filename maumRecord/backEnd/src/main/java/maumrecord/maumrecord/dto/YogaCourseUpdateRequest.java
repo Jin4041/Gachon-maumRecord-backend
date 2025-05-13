@@ -5,11 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class YogaCourseRequest {
-    private Long poseId;
-    private int time;
+public class YogaCourseUpdateRequest {
+    private String courseTitle;
+    private String newDescription;
+    private List<YogaCourseRequest> poses;
 }

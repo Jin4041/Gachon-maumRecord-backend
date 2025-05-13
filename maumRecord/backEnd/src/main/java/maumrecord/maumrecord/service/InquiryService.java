@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ public class InquiryService {
                 .status(UserInquiry.InquiryStatus.PENDING)
                 .message(request.getMessage())
                 .file(request.getFile())
+                .date(LocalDateTime.now())
                 .build());
         userActivityLogRepository.save(UserActivityLog.builder()
                 .user(user)
@@ -89,6 +91,7 @@ public class InquiryService {
                 .userInquiry(inquiry)
                 .title("Re: "+inquiry.getTitle())
                 .content(request.getMessage())
+                .answeredAt(LocalDateTime.now())
                 .build());
         inquiry.setReply(answer);
         inquiry.setStatus(UserInquiry.InquiryStatus.ANSWERED);

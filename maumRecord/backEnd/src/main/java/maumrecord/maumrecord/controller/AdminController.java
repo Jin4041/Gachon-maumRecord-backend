@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import maumrecord.maumrecord.domain.*;
-import maumrecord.maumrecord.dto.HealingRequest;
-import maumrecord.maumrecord.dto.InquiryRequest;
-import maumrecord.maumrecord.dto.YogaCourseRequest;
+import maumrecord.maumrecord.dto.*;
 import maumrecord.maumrecord.service.HealingService;
 import maumrecord.maumrecord.service.InquiryService;
 import maumrecord.maumrecord.service.UserService;
@@ -40,7 +38,7 @@ public class AdminController {
         return userService.findById(id);
     }
 
-    @GetMapping(value="/delete/{id}")
+    @DeleteMapping(value="/delete/{id}")
     @Operation(summary = "특정 회원 삭제 by id")
     public ResponseEntity<String> deleteUser(@PathVariable Long id)
     {
@@ -110,14 +108,14 @@ public class AdminController {
         return healingService.findHealingProgram(id);
     }
 
-    @PostMapping(value = "/healing/update/{id}")
+    @PatchMapping(value = "/healing/update/{id}")
     @Operation(summary = "특정 힐링 프로그램 수정")
     public ResponseEntity<String> updateHealing(@RequestBody HealingRequest request, @PathVariable Long id){
         healingService.updateHealingProgram(id,request);
         return ResponseEntity.ok("힐링 프로그램 수정이 완료되었습니다.");
     }
 
-    @GetMapping(value = "/healing/delete/{id}")
+    @DeleteMapping(value = "/healing/delete/{id}")
     @Operation(summary = "특정 힐링 프로그램 삭제")
     public ResponseEntity<String> deleteHealing(@PathVariable Long id){
         healingService.deleteHealingProgram(id);
@@ -126,33 +124,33 @@ public class AdminController {
 
     @GetMapping(value = "/healing/yoga/courses")
     @Operation(summary = "요가 코스 전체 제목 조회 -> 개별 코스는 해당 제목으로 서치하도록")
-    public Set<String> yogaCourses(){
+    public List<String> yogaCourses(){
         return healingService.yogaCourseList();
     }
 
     @GetMapping(value = "/healing/yoga/courses/{title}")
     @Operation(summary = "특정 요가 코스 조회")
-    public List<YogaCourse> yogaCourse(@RequestParam String title){
+    public List<YogaCourseElement> yogaCourse(@PathVariable String title){
         return healingService.findYogaCourse(title);
     }
 
     @PostMapping(value = "/healing/yoga/create")
     @Operation(summary = "요가 코스 추가")
-    public ResponseEntity<String> createCourse(@RequestBody List<YogaCourseRequest> yogaCourse){
-        healingService.createYogaCourse(yogaCourse);
+    public ResponseEntity<String> createCourse(@RequestBody YogaCourseCreateRequest request) {
+        healingService.createYogaCourse(request.getTitle(), request.getDescription(), request.getPoses());
         return ResponseEntity.ok("요가 코스 생성이 완료되었습니다.");
     }
 
-    @PostMapping(value = "/healing/yoga/update")
+    @PatchMapping(value = "/healing/yoga/update")
     @Operation(summary = "특정 요가 코스 업데이트")
-    public ResponseEntity<String> updateCourse(@RequestBody List<YogaCourseRequest> yogaCourse){
-        healingService.updateYogaCourse(yogaCourse);
+    public ResponseEntity<String> updateCourse(@RequestBody YogaCourseUpdateRequest request) {
+        healingService.updateYogaCourse(request);
         return ResponseEntity.ok("요가 코스 수정이 완료되었습니다.");
     }
 
-    @GetMapping(value = "/healing/yoga/delete/{title}")
+    @DeleteMapping(value = "/healing/yoga/delete/{title}")
     @Operation(summary = "특정 힐링 프로그램 업데이트")
-    public ResponseEntity<String> deleteCourse(@PathVariable String title){
+    public ResponseEntity<String> deleteCourse(@PathVariable String title) {
         healingService.deleteYogaCourse(title);
         return ResponseEntity.ok("요가 코스 삭제가 완료되었습니다.");
     }

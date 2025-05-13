@@ -2,11 +2,14 @@ package maumrecord.maumrecord.service;
 
 import lombok.RequiredArgsConstructor;
 import maumrecord.maumrecord.domain.HealingProgram;
-import maumrecord.maumrecord.domain.YogaCourse;
+import maumrecord.maumrecord.domain.YogaCourseElement;
+import maumrecord.maumrecord.domain.YogaCourseMaster;
 import maumrecord.maumrecord.dto.HealingRequest;
 import maumrecord.maumrecord.dto.YogaCourseRequest;
+import maumrecord.maumrecord.dto.YogaCourseUpdateRequest;
 import maumrecord.maumrecord.repository.HealingRepository;
-import maumrecord.maumrecord.repository.YogaCourseRepository;
+import maumrecord.maumrecord.repository.YogaCourseElementRepository;
+import maumrecord.maumrecord.repository.YogaCourseMasterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,13 +17,15 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class HealingService {
     private final HealingRepository healingRepository;
-    private final YogaCourseRepository yogaCourseRepository;
+    private final YogaCourseMasterRepository yogaCourseMasterRepository;
+    private final YogaCourseElementRepository yogaCourseElementRepository;
 
     public void createHealing(HealingRequest request) {
         healingRepository.save(HealingProgram.builder()
@@ -35,7 +40,7 @@ public class HealingService {
         return healingRepository.findAll();
     }
     public List<HealingProgram> yogaPoseList(){
-        return healingRepository.findAllByCategory("Yoga");
+        return healingRepository.findAllByCategory("YogaPose");
     }
     public List<HealingProgram> meditationList(){
         return healingRepository.findAllByCategory("Meditation");
@@ -54,67 +59,99 @@ public class HealingService {
         healingProgram.setFileUrl(request.getFileUrl());
         healingRepository.save(healingProgram);
     }
+
     public void deleteHealingProgram(Long id) {
-        HealingProgram healingProgram = healingRepository.findById(id).orElseThrow(()->new RuntimeException("해당 프로그램을 찾을 수 없습니다."));
-        if(healingProgram.getCategory().equals("yoga")){   //삭제하는 프로그램이 요가인 경우 -> 삭제 전 사용된 요가 코스의 순서 재지정 완료 후 진행
-            List<YogaCourse>courses=healingProgram.getYogaCourse();
-            List<String>titles=courses.stream()
-                    .map(YogaCourse::getCourseTitle)
-                    .distinct()
-                    .toList();
-            healingRepository.deleteById(id);
-            for(String title:titles){
-                courses = yogaCourseRepository.findByCourseTitle(title).stream()    //요가 코스의 순서 재지정 전 순서대로 정렬
-                        .sorted(Comparator.comparingInt(YogaCourse::getSequenceOrder))
-                        .toList();
-                int sequenceOrder=1;
-                for(YogaCourse course:courses){
-                    course.setSequenceOrder(sequenceOrder++);
+        HealingProgram program = healingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 프로그램을 찾을 수 없습니다."));
+        // 요가 포즈일 경우 코스에서 사용 중인지 확인
+        if ("yoga".equalsIgnoreCase(program.getCategory())) {
+            List<YogaCourseElement> usedElements = yogaCourseElementRepository.findByYogaPose(program);
+            if (!usedElements.isEmpty()) {
+                // 코스별로 순서 재정렬
+                Set<YogaCourseMaster> affectedCourses = usedElements.stream()
+                        .map(YogaCourseElement::getCourse)
+                        .collect(Collectors.toSet());
+                // 요소 제거
+                yogaCourseElementRepository.deleteAll(usedElements);
+                // 각 코스에서 남은 요소 순서 재정렬
+                for (YogaCourseMaster course : affectedCourses) {
+                    List<YogaCourseElement> elements = yogaCourseElementRepository
+                            .findByCourseOrderBySequenceOrderAsc(course);
+                    int seq = 1;
+                    for (YogaCourseElement e : elements) {
+                        e.setSequenceOrder(seq++);
+                    }
+                    yogaCourseElementRepository.saveAll(elements);
                 }
-                yogaCourseRepository.saveAll(courses);
             }
         }
+        healingRepository.delete(program);  // 최종 삭제
     }
 
-    public void createYogaCourse(List<YogaCourseRequest> yogaCourseRequests) {  //요가코스는 순서대로 전달된다 가정
-        int sequenceOrder=1;
-        for(YogaCourseRequest request : yogaCourseRequests){
-            HealingProgram yogaPose = healingRepository
-                    .findById(request.getPoseId())
-                    .orElseThrow(() -> new RuntimeException("해당 자세를 찾을 수 없습니다."));
-            YogaCourse yogaCourse=YogaCourse.builder()
-                    .courseTitle(request.getCourseTitle())
-                    .description(request.getDescription())
+
+    public void createYogaCourse(String courseTitle, String description, List<YogaCourseRequest> yogaCourseRequests) {
+        YogaCourseMaster master = YogaCourseMaster.builder()
+                .title(courseTitle)
+                .description(description)
+                .build();
+        yogaCourseMasterRepository.save(master);
+
+        int sequenceOrder = 1;
+        for (YogaCourseRequest request : yogaCourseRequests) {
+            HealingProgram pose = healingRepository.findById(request.getPoseId())
+                    .orElseThrow(() -> new RuntimeException("해당 포즈를 찾을 수 없습니다."));
+
+            YogaCourseElement element = YogaCourseElement.builder()
+                    .course(master)
+                    .yogaPose(pose)
+                    .sequenceOrder(sequenceOrder++)
                     .time(request.getTime())
-                    .yogaPose(yogaPose)
-                    .sequenceOrder(sequenceOrder++).build();
-            yogaCourseRepository.save(yogaCourse);
-        }
-    }
-    public Set<String> yogaCourseList(){
-        Set<String> titles=new HashSet<>();
-        List<YogaCourse> courses=yogaCourseRepository.findAll();
-        for(YogaCourse course:courses){
-            titles.add(course.getCourseTitle());
-        }
-        return titles;
-    }
-    public List<YogaCourse> findYogaCourse (String title){  //요가 코스 탐색
-        return yogaCourseRepository.findByCourseTitle(title);
-    }
-    //todo: 요가코스 업데이트 시 순서는 변경 불가, 순서 변경이 필요하면 어떻게 할지 다시 생각
-    public void updateYogaCourse(List<YogaCourseRequest> requests) {
-        for(YogaCourseRequest request : requests) {
-            YogaCourse yogaCourse = yogaCourseRepository.findById(request.getCourseId())
-                    .orElseThrow(() -> new RuntimeException("해당 코스를 찾지 못했습니다."));
-            yogaCourse.setCourseTitle(request.getCourseTitle());
-            yogaCourse.setDescription(request.getDescription());
-            yogaCourse.setTime(request.getTime());
-            yogaCourseRepository.save(yogaCourse);
+                    .build();
+
+            yogaCourseElementRepository.save(element);
         }
     }
 
-    public void deleteYogaCourse (String title) {   //개별 코스요소 삭제는 힐링프로그램에서 담당하도록
-        yogaCourseRepository.deleteAllByCourseTitle(title);
+    public List<String> yogaCourseList() {
+        return yogaCourseMasterRepository.findAll().stream()
+                .map(YogaCourseMaster::getTitle)
+                .toList();
     }
+
+
+    public List<YogaCourseElement> findYogaCourse(String title) {
+        YogaCourseMaster course = yogaCourseMasterRepository.findByTitle(title);
+        if (course == null) {
+            throw new RuntimeException("해당 요가 코스를 찾을 수 없습니다.");
+        }
+        return yogaCourseElementRepository.findByCourseOrderBySequenceOrderAsc(course);
+    }
+
+
+    //todo: 요가코스 업데이트 시 순서는 변경 불가, 순서 변경이 필요하면 어떻게 할지 다시 생각
+    public void updateYogaCourse(YogaCourseUpdateRequest request) {
+        YogaCourseMaster course = yogaCourseMasterRepository.findByTitle(request.getCourseTitle());
+        if (course == null) {
+            throw new RuntimeException("해당 코스를 찾을 수 없습니다.");
+        }
+
+        course.setDescription(request.getNewDescription());
+        yogaCourseMasterRepository.save(course);
+
+        for (YogaCourseUpdateRequest.YogaPoseUpdate poseUpdate : request.getPoses()) {
+            YogaCourseElement element = yogaCourseElementRepository.findById(poseUpdate.getElementId())
+                    .orElseThrow(() -> new RuntimeException("코스 구성 요소를 찾을 수 없습니다."));
+            element.setTime(poseUpdate.getTime());
+        }
+    }
+
+
+    public void deleteYogaCourse(String title) {
+        YogaCourseMaster course = yogaCourseMasterRepository.findByTitle(title);
+        if (course == null) {
+            throw new RuntimeException("해당 코스를 찾을 수 없습니다.");
+        }
+        yogaCourseMasterRepository.delete(course);
+    }
+
 }

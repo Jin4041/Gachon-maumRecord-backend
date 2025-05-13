@@ -31,8 +31,7 @@ public class UserController {
     private final UserDetailService userDetailService;
     private final HealingService healingService;
 
-    //todo: 로그아웃, 회원정보 수정, 비밀번호 저장방식?, 로그인 방식 업데이트
-    @GetMapping(value="/delete")
+    @DeleteMapping(value="/delete")
     @Operation(summary = "회원탈퇴")
     public ResponseEntity<String> deleteUser(Authentication authentication)
     {
@@ -46,7 +45,7 @@ public class UserController {
         return userDetailService.loadUserByUsername(authentication.getName());
     }
 
-    @PostMapping(value = "/update")
+    @PatchMapping(value = "/update")
     @Operation(summary = "회원 정보 수정")
     public ResponseEntity<String> updateUser(UserRequest request,Authentication authentication){
         userService.updateUser(request,authentication.getName());
@@ -98,13 +97,13 @@ public class UserController {
 
     @GetMapping(value = "/healing/yoga/courses")
     @Operation(summary = "요가 코스 전체 조회")
-    public Set<String> yogaCourses(){
+    public List<String> yogaCourses(){
         return healingService.yogaCourseList();
     }
 
     @GetMapping(value = "/healing/yoga/courses/{title}")
     @Operation(summary = "특정 요가 코스 조회")
-    public List<YogaCourse> yogaCourse(@RequestParam String title){
+    public List<YogaCourseElement> yogaCourse(@PathVariable String title){
         return healingService.findYogaCourse(title);
     }
 }
