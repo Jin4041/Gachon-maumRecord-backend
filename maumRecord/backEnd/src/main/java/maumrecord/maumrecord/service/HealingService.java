@@ -5,16 +5,14 @@ import maumrecord.maumrecord.domain.HealingProgram;
 import maumrecord.maumrecord.domain.YogaCourseElement;
 import maumrecord.maumrecord.domain.YogaCourseMaster;
 import maumrecord.maumrecord.dto.HealingRequest;
+import maumrecord.maumrecord.dto.YogaCourseCreateRequest;
 import maumrecord.maumrecord.dto.YogaCourseRequest;
-import maumrecord.maumrecord.dto.YogaCourseUpdateRequest;
 import maumrecord.maumrecord.repository.HealingRepository;
 import maumrecord.maumrecord.repository.YogaCourseElementRepository;
 import maumrecord.maumrecord.repository.YogaCourseMasterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -128,22 +126,35 @@ public class HealingService {
     }
 
 
-    //todo: 요가코스 업데이트 시 순서는 변경 불가, 순서 변경이 필요하면 어떻게 할지 다시 생각
-    public void updateYogaCourse(YogaCourseUpdateRequest request) {
-        YogaCourseMaster course = yogaCourseMasterRepository.findByTitle(request.getCourseTitle());
+    public void updateYogaCourse(YogaCourseCreateRequest request) {
+        YogaCourseMaster course = yogaCourseMasterRepository.findByTitle(request.getTitle());
         if (course == null) {
             throw new RuntimeException("해당 코스를 찾을 수 없습니다.");
         }
 
-        course.setDescription(request.getNewDescription());
+        course.setDescription(request.getDescription());
         yogaCourseMasterRepository.save(course);
 
-        for (YogaCourseUpdateRequest.YogaPoseUpdate poseUpdate : request.getPoses()) {
-            YogaCourseElement element = yogaCourseElementRepository.findById(poseUpdate.getElementId())
-                    .orElseThrow(() -> new RuntimeException("코스 구성 요소를 찾을 수 없습니다."));
-            element.setTime(poseUpdate.getTime());
+        // 기존 요소 삭제
+        yogaCourseElementRepository.deleteAllByCourse(course);
+
+        // 새 요소 삽입
+        int sequenceOrder = 1;
+        for (YogaCourseRequest pose : request.getPoses()) {
+            HealingProgram yogaPose = healingRepository.findById(pose.getPoseId())
+                    .orElseThrow(() -> new RuntimeException("포즈를 찾을 수 없습니다."));
+
+            YogaCourseElement element = YogaCourseElement.builder()
+                    .course(course)
+                    .yogaPose(yogaPose)
+                    .time(pose.getTime())
+                    .sequenceOrder(sequenceOrder++)
+                    .build();
+
+            yogaCourseElementRepository.save(element);
         }
     }
+
 
 
     public void deleteYogaCourse(String title) {

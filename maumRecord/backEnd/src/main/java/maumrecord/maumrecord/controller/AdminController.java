@@ -143,7 +143,7 @@ public class AdminController {
 
     @PatchMapping(value = "/healing/yoga/update")
     @Operation(summary = "특정 요가 코스 업데이트")
-    public ResponseEntity<String> updateCourse(@RequestBody YogaCourseUpdateRequest request) {
+    public ResponseEntity<String> updateCourse(@RequestBody YogaCourseCreateRequest request) {
         healingService.updateYogaCourse(request);
         return ResponseEntity.ok("요가 코스 수정이 완료되었습니다.");
     }
