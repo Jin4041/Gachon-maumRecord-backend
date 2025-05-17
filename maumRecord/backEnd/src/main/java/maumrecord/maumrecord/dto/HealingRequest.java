@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @Builder
@@ -14,4 +16,5 @@ public class HealingRequest {
     private String description;
     private String category;
     private String fileUrl;
+    private Map<String, Object> config;
 }

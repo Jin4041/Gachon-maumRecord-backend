@@ -31,6 +31,7 @@ public class HealingService {
                 .description(request.getDescription())
                 .category(request.getCategory())
                 .fileUrl(request.getFileUrl())
+                .config(request.getConfig())
                 .build());
     }
 
@@ -51,10 +52,11 @@ public class HealingService {
     }
     public void updateHealingProgram(Long id, HealingRequest request) {
         HealingProgram healingProgram = findHealingProgram(id);
-        healingProgram.setTitle(request.getTitle());
-        healingProgram.setDescription(request.getDescription());
-        healingProgram.setCategory(request.getCategory());
-        healingProgram.setFileUrl(request.getFileUrl());
+        if (request.getTitle() != null) healingProgram.setTitle(request.getTitle());
+        if (request.getDescription() != null) healingProgram.setDescription(request.getDescription());
+        if (request.getCategory() != null) healingProgram.setCategory(request.getCategory());
+        if (request.getFileUrl() != null) healingProgram.setFileUrl(request.getFileUrl());
+        if (request.getConfig() != null) healingProgram.setConfig(request.getConfig());
         healingRepository.save(healingProgram);
     }
 
