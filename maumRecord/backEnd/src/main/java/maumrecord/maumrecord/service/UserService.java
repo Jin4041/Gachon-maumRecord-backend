@@ -84,9 +84,9 @@ public class UserService {
     public List<User> findUsers(){return userRepository.findAll();}
     
     //로그인
-    public String login(LoginRequest dto) {
-        String email = dto.getEmail();
-        String password = dto.getPassword();
+    public String login(LoginRequest req) {
+        String email = req.getEmail();
+        String password = req.getPassword();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."));

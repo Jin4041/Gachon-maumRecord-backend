@@ -45,7 +45,7 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)  //토큰 기반 인증을 사용하기 때문에 csrf 비활성화
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/signup", "/login", "/users").permitAll()  //회원가입, 로그인 페이지는 모두 허용
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/signup", "/login", "/users","/logout").permitAll()  //회원가입, 로그인 페이지는 모두 허용
                         .requestMatchers("/admin", "/admin/**").hasRole("ADMIN")  // 관리자 권한 필요
                         .requestMatchers("/user", "/user/**").hasRole("USER")    // 일반 사용자 권한 필요
                         .anyRequest().authenticated())

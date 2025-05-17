@@ -10,11 +10,11 @@ import maumrecord.maumrecord.service.HealingService;
 import maumrecord.maumrecord.service.InquiryService;
 import maumrecord.maumrecord.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @SecurityRequirement(name = "bearerAuth")
 @RestController
@@ -45,61 +45,55 @@ public class AdminController {
         userService.deleteUser(id);
         return ResponseEntity.ok("회원탈퇴 완료");
     }
-    //todo: 관리자 답변 부분 정해지면 작성 - 전체 답변 리스트, 특정 답변 조회, 답변 작성, 답변 미작성 리스트
-    @GetMapping(value="/noreplyInquiries")
-    @Operation(summary = "답변 없는 문의 리스트 확인")
-    public List<UserInquiry> noreplyInquiries(){
-        return inquiryService.noReplyInquiries();
-    }
-
-    @GetMapping(value="/answers")
-    @Operation(summary = "답변 리스트 확인")
-    public List<AdminAnswer> adminAnswers(){
-        return inquiryService.answers();
-    }
 
     @PostMapping(value = "/replyAnswer/{inquiryId}")
-    @Operation(summary = "답변 리스트 확인")
+    @Operation(summary = "답변 작성")
     public ResponseEntity<String> adminAnswers(InquiryRequest request, @PathVariable Long inquiryId){
         inquiryService.replyAnswer(request,inquiryId);
         return ResponseEntity.ok("답변 작성 완료");
     }
 
-    @GetMapping(value="/answer/{id}")
-    @Operation(summary = "특정 답변 확인")
-    public Map<UserInquiry,AdminAnswer> answer(@PathVariable Long id){
-        return inquiryService.answerMap(id);
+    @GetMapping(value = "/inquiries")
+    @Operation(summary = "전체 문의 내역")
+    public List<InquiryResponse> findAllInquiries(Authentication authentication){
+        return inquiryService.findInquires(authentication);
+    }
+
+    @GetMapping(value = "/inquiries/{id}")
+    @Operation(summary = "해당 문의 확인")
+    public InquiryWithAnswer findInquiryById(Authentication authentication, @PathVariable Long id) throws AccessDeniedException {
+        return inquiryService.findUserInquiryById(authentication, id);
     }
 
     @PostMapping(value = "/healing/create")
     @Operation(summary = "힐링 프로그램 추가")
-    public ResponseEntity<String> createHealing(@RequestBody HealingRequest request){
+    public ResponseEntity<String> createHealing(@RequestBody HealingDTO request){
         healingService.createHealing(request);
         return ResponseEntity.ok("힐링 프로그램 추가가 완료되었습니다.");
     }
     
     @GetMapping(value = "/healing")
     @Operation(summary = "힐링 프로그램 전체 조회")
-    public List<HealingProgram> healings(){
-        return healingService.healingList();
+    public List<HealingDTO> healings(){
+        return healingService.healingList("all");
     }
 
     @GetMapping(value = "/healing/music")
     @Operation(summary = "음악 전체 조회")
-    public List<HealingProgram> musics(){
-        return healingService.musicList();
+    public List<HealingDTO> musics(){
+        return healingService.healingList("Music");
     }
 
     @GetMapping(value = "/healing/meditation")
     @Operation(summary = "명상 전체 조회")
-    public List<HealingProgram> meditations(){
-        return healingService.meditationList();
+    public List<HealingDTO> meditations(){
+        return healingService.healingList("Meditation");
     }
 
     @GetMapping(value = "/healing/yogaPose")
     @Operation(summary = "요가 자세 전체 조회")
-    public List<HealingProgram> yogaPoses(){
-        return healingService.yogaPoseList();
+    public List<HealingDTO> yogaPoses(){
+        return healingService.healingList("yogaPose");
     }
 
     @GetMapping(value = "/healing/{id}")
@@ -110,7 +104,7 @@ public class AdminController {
 
     @PatchMapping(value = "/healing/update/{id}")
     @Operation(summary = "특정 힐링 프로그램 수정")
-    public ResponseEntity<String> updateHealing(@RequestBody HealingRequest request, @PathVariable Long id){
+    public ResponseEntity<String> updateHealing(@RequestBody HealingDTO request, @PathVariable Long id){
         healingService.updateHealingProgram(id,request);
         return ResponseEntity.ok("힐링 프로그램 수정이 완료되었습니다.");
     }

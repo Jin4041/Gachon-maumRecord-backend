@@ -11,7 +11,7 @@ import java.util.Map;
 @Setter
 @Builder
 @AllArgsConstructor
-public class HealingRequest {
+public class HealingDTO {
     private String title;
     private String description;
     private String category;

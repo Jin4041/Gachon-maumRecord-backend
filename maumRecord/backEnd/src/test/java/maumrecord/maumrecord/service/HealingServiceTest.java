@@ -3,7 +3,7 @@ package maumrecord.maumrecord.service;
 import maumrecord.maumrecord.domain.HealingProgram;
 import maumrecord.maumrecord.domain.YogaCourseElement;
 import maumrecord.maumrecord.domain.YogaCourseMaster;
-import maumrecord.maumrecord.dto.HealingRequest;
+import maumrecord.maumrecord.dto.HealingDTO;
 import maumrecord.maumrecord.dto.YogaCourseRequest;
 import maumrecord.maumrecord.repository.HealingRepository;
 import maumrecord.maumrecord.repository.YogaCourseElementRepository;
@@ -40,7 +40,7 @@ class HealingServiceTest {
 
     @Test
     void createHealing() {
-        HealingRequest request = new HealingRequest("테스트 타이틀", "설명", "Yoga", "url");
+        HealingDTO request = new HealingDTO("테스트 타이틀", "설명", "Yoga", "url",null);
 
         HealingProgram healingProgram = HealingProgram.builder()
                 .title("Yoga 1")

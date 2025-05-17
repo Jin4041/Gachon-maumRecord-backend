@@ -3,10 +3,10 @@ package maumrecord.maumrecord.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import maumrecord.maumrecord.domain.*;
-import maumrecord.maumrecord.dto.InquiryRequest;
-import maumrecord.maumrecord.dto.UserRequest;
+import maumrecord.maumrecord.dto.*;
 import maumrecord.maumrecord.service.HealingService;
 import maumrecord.maumrecord.service.InquiryService;
 import maumrecord.maumrecord.service.UserDetailService;
@@ -41,8 +41,9 @@ public class UserController {
 
     @GetMapping(value = "/profile")
     @Operation(summary = "회원 정보 확인")
-    public User selectUser(Authentication authentication){
-        return userDetailService.loadUserByUsername(authentication.getName());
+    public UserResponse selectUser(Authentication authentication){
+        User user= userDetailService.loadUserByUsername(authentication.getName());
+        return new UserResponse(user.getEmail(),user.getNickName(),user.getImage(),user.getRole());
     }
 
     @PatchMapping(value = "/update")
@@ -61,32 +62,32 @@ public class UserController {
 
     @GetMapping(value = "/my-inquiries")
     @Operation(summary = "내 문의 내역")
-    public Map<UserInquiry, AdminAnswer> findInquiries(Authentication authentication){
-        return inquiryService.findMyInquires(authentication);
+    public List<InquiryResponse> findInquiries(Authentication authentication){
+        return inquiryService.findInquires(authentication);
     }
 
-    @GetMapping(value = "/my-inquiriy/{id}")
+    @GetMapping(value = "/my-inquiries/{id}")
     @Operation(summary = "내 문의 확인")
-    public Map<UserInquiry, AdminAnswer> findInquiryById(Authentication authentication, @PathVariable Long id) throws AccessDeniedException {
+    public InquiryWithAnswer findInquiryById(Authentication authentication, @PathVariable Long id) throws AccessDeniedException {
         return inquiryService.findUserInquiryById(authentication, id);
     }
 
     @GetMapping(value = "/healing")
     @Operation(summary = "힐링 프로그램 전체 조회")
-    public List<HealingProgram> healings(){
-        return healingService.healingList();
+    public List<HealingDTO> healings(){
+        return healingService.healingList("all");
     }
 
     @GetMapping(value = "/healing/music")
     @Operation(summary = "음악 전체 조회")
-    public List<HealingProgram> musics(){
-        return healingService.musicList();
+    public List<HealingDTO> musics(){
+        return healingService.healingList("Music");
     }
 
     @GetMapping(value = "/healing/meditation")
     @Operation(summary = "명상 전체 조회")
-    public List<HealingProgram> meditations(){
-        return healingService.meditationList();
+    public List<HealingDTO> meditations(){
+        return healingService.healingList("Meditation");
     }
 
     @GetMapping(value = "/healing/{id}")

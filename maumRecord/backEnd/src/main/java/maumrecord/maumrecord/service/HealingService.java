@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import maumrecord.maumrecord.domain.HealingProgram;
 import maumrecord.maumrecord.domain.YogaCourseElement;
 import maumrecord.maumrecord.domain.YogaCourseMaster;
-import maumrecord.maumrecord.dto.HealingRequest;
+import maumrecord.maumrecord.dto.HealingDTO;
 import maumrecord.maumrecord.dto.YogaCourseCreateRequest;
 import maumrecord.maumrecord.dto.YogaCourseRequest;
 import maumrecord.maumrecord.repository.HealingRepository;
@@ -13,6 +13,7 @@ import maumrecord.maumrecord.repository.YogaCourseMasterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public class HealingService {
     private final YogaCourseMasterRepository yogaCourseMasterRepository;
     private final YogaCourseElementRepository yogaCourseElementRepository;
 
-    public void createHealing(HealingRequest request) {
+    public void createHealing(HealingDTO request) {
         healingRepository.save(HealingProgram.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -35,22 +36,22 @@ public class HealingService {
                 .build());
     }
 
-    public List<HealingProgram> healingList(){
-        return healingRepository.findAll();
+    public List<HealingDTO> healingList(String category) {
+        List<HealingProgram> healingPrograms = category.equals("all")? healingRepository.findAll() : healingRepository.findAllByCategory(category);
+        List<HealingDTO> result = new ArrayList<>();
+        for(HealingProgram program : healingPrograms){
+            result.add(new HealingDTO(
+                    program.getTitle(), program.getDescription(), program.getCategory(), program.getFileUrl(), program.getConfig()
+            ));
+        }
+        return result;
     }
-    public List<HealingProgram> yogaPoseList(){
-        return healingRepository.findAllByCategory("YogaPose");
-    }
-    public List<HealingProgram> meditationList(){
-        return healingRepository.findAllByCategory("Meditation");
-    }
-    public List<HealingProgram> musicList(){
-        return healingRepository.findAllByCategory("Music");
-    }
+
     public HealingProgram findHealingProgram (Long id){
         return healingRepository.findById(id).orElseThrow(()->new RuntimeException("해당 프로그램을 찾을 수 없습니다."));
     }
-    public void updateHealingProgram(Long id, HealingRequest request) {
+
+    public void updateHealingProgram(Long id, HealingDTO request) {
         HealingProgram healingProgram = findHealingProgram(id);
         if (request.getTitle() != null) healingProgram.setTitle(request.getTitle());
         if (request.getDescription() != null) healingProgram.setDescription(request.getDescription());
